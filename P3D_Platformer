@@ -1,0 +1,341 @@
+blocks = []
+
+add_library("queasycam")
+from math import sqrt
+from math import pi
+frequency = 255
+distance = 100
+score = 0
+screen = "menu"
+start_select = False
+instructions_select = False
+scores_select = False
+exit_select = False
+menu_select = False
+restart_select = False
+
+
+def setup():
+    global player, cam, blocks, distance, scores
+    noCursor()
+    scores = loadStrings("scores.txt")
+    size(2000, 1000, P3D)
+    cam = QueasyCam(this)
+    player = Player()
+    cam.pan = radians(270)
+    for block in range(1,10):
+        blocks.append(Block(30,random(-60,60), random(-25,25), random(-5,5),frequency + (block*52),distance))
+        distance += 50
+        
+        
+
+def draw():
+    global player, blocks, frequency, distance, screen, score, scores, start_select, instructions_select, scores_select, exit_select, menu_select, restart_select
+    
+    if screen == "menu":
+        background(255)
+        fill(0)
+        textSize(40)
+        textAlign(CENTER)
+        cam.position.x = 0
+        cam.position.y = 0
+        cam.position.z = 0
+        pushMatrix()
+        translate(0,0,-300)
+        text("START",0,0,0)
+        if start_select == True:
+            fill(0,255,0,127)
+            text("START",2,-2)
+        popMatrix()
+        pushMatrix()
+        rotateY(radians(90))
+        translate(0,0,-300)
+        text("INSTRUCTIONS",0,0,0)
+        if instructions_select == True:
+            fill(255,0,0,127)
+            text("INSTRUCTIONS",2,-2)
+        popMatrix()
+        pushMatrix()
+        rotateY(radians(-90))
+        translate(0,0,-300)
+        text("SCORES",0,0,0)
+        if scores_select == True:
+            fill(0,0,255,127)
+            text("SCORES",2,-2)
+        popMatrix()
+        pushMatrix()
+        rotateY(radians(-180))
+        translate(0,0,-300)
+        text("BY: ERIC WEI",0,0,0)
+        popMatrix()
+        if (cam.tilt * 180/pi) % 360 < 20 or (cam.tilt * 180/pi) % 360 > 340:
+            if (cam.pan * 180/pi) % 360 < 20 or (cam.pan * 180/pi) % 360 > 340:
+                scores_select = True
+            else:
+                scores_select = False
+            if 160 < (cam.pan * 180/pi) % 360 < 200:
+                instructions_select = True
+            else:
+                instructions_select = False
+            if 250 < (cam.pan * 180/pi) % 360 < 290:
+                start_select = True
+            else:
+                start_select = False
+    
+    if screen == "instructions":
+        background(255)
+        fill(0)
+        textSize(40)
+        textAlign(CENTER)
+        cam.position.x = 0
+        cam.position.y = 0
+        cam.position.z = 0
+        background(255)
+        pushMatrix()
+        rotateY(radians(90))
+        translate(0,0,-500)
+        text("Welcome to Eric's grade 12 Summative, an experimental \n3D platformer created in python processing. To navigate the menu, \nsimply use the mouse and select each option. The objective of \nthis game is to travel as far as possible on the continously changing platforms. \nThe further you get, the higher your score!. Movement is controlled by \nWASD and the space key and perspective is controlled by the mouse,",0,-60,0)
+        popMatrix()
+        pushMatrix()
+        rotateY(radians(-90))
+        translate(0,0,-500)
+        text("EXIT",0,0)
+        if exit_select == True:
+            fill(0,0,255,127)
+            text("EXIT",2,-2)
+        popMatrix()
+        if (cam.tilt * 180/pi) % 360 < 20 or (cam.tilt * 180/pi) % 360 > 340:
+            if (cam.pan * 180/pi) % 360 < 20 or (cam.pan * 180/pi) % 360 > 340:
+                exit_select = True
+            else:
+                exit_select = False
+        
+        
+    if screen == "start":
+        cam.speed = 0.4
+        player.update()
+        background(0)
+        if score < cam.position.z//4:
+            score = cam.position.z//4
+        pushMatrix()
+        translate(0,-50,0)
+        box(40,20,40)
+        popMatrix()
+        for block in blocks:
+            block.update()
+            block.collision(player)
+            if block.death() == True:
+                if block.lifespan > 50:
+                    blocks.append(Block(30,random(-55,55), random(-20,20), random(-15,15),block.lifespan - 1,distance))
+                else:
+                    blocks.append(Block(30,random(-55,55), random(-20,20), random(-15,15),block.lifespan - 1,distance))
+                blocks.remove(block)
+                distance += 50
+        if cam.position.y > 400:
+            scores.append(str(int(score)))
+            screen = "game over"
+            cam.pan = radians(180)
+            cam.tilt = 0
+    
+    if screen == "scores":
+        background(255)
+        fill(0)
+        textSize(30)
+        textAlign(CENTER)
+        cam.position.x = 0
+        cam.position.y = 0
+        cam.position.z = 0
+        background(255)
+        pushMatrix()
+        rotateY(radians(90))
+        translate(0,0,-500)
+        text("SCORES",0,-100,0)
+        for n in range(len(scores)):
+            text(str(n+1)+". " + str(scores[n]),0, 30*(n+1)-100,0)
+        popMatrix()
+        pushMatrix()
+        rotateY(radians(-90))
+        translate(0,0,-500)
+        text("EXIT",0,0)
+        if exit_select == True:
+            fill(0,0,255,127)
+            text("EXIT",2,-2)
+        popMatrix()
+        if (cam.tilt * 180/pi) % 360 < 20 or (cam.tilt * 180/pi) % 360 > 340:
+            if (cam.pan * 180/pi) % 360 < 20 or (cam.pan * 180/pi) % 360 > 340:
+                exit_select = True
+            else:
+                exit_select = False
+    
+    if screen == "game over":
+        background(255)
+        fill(0)
+        textSize(40)
+        textAlign(CENTER)
+        cam.position.x = 0
+        cam.position.y = 0
+        cam.position.z = 0
+        pushMatrix()
+        rotateY(radians(90))
+        translate(0,0,-300)
+        text("SCORE: " + str(int(score)),0,-30,0)
+        textSize(20)
+        if restart_select == True:
+            fill(255,0,0)
+            text("RESTART",2,19.5,0)
+        fill(0)
+        text("RESTART",0,20,0)
+        if menu_select == True:
+            fill(255,0,0)
+            text("MENU",2,59.5,0)
+        fill(0)
+        text("MENU",0,60,0)
+        popMatrix()
+        if 0 <= degrees(cam.tilt) < 5 or degrees(cam.tilt) > -5:
+            menu_select = True
+        else:
+            menu_select = False
+        if -15 < degrees(cam.tilt) < -5:
+            restart_select = True
+        else:
+            restart_select = False
+                
+            
+        
+                
+    
+    
+
+class Player():
+    
+    def __init__(self):
+        cam.speed = 0.4
+        self.dimension = PVector(2,4,2)
+        self.velocity = PVector(0,0,0)
+        self.gravity = PVector(0,0.05,0)
+        self.grounded = False
+    
+    def update(self):
+        if self.velocity.y > -2:
+            self.velocity.add(self.gravity)
+        cam.position.add(self.velocity)
+        
+        if cam.position.y + self.dimension.y > -70:
+            if 20 > cam.position.x > -20:
+                if 20 > cam.position.z > -20:
+                    cam.position.y = -70 - self.dimension.y
+                    self.velocity.y = 0
+                    self.grounded = True
+        
+        if keyPressed:
+            if self.grounded:
+                if key == " ":
+                    self.velocity.y = 0
+                    self.grounded = False
+                    self.velocity.y -= 1.5
+                    cam.position.y -= 0.1
+
+class Block():
+       
+    def __init__(self, s, x, y, z, frequency,distance):
+        self.dimension = PVector(s, s, s)
+        self.position = PVector(x,y,z + distance)
+        self.time = 0
+        self.lifespan = frequency 
+    
+    def update(self):
+        if self.time*4 <= 255:
+            fill(255,255,255, self.time*4)
+        elif (self.lifespan - self.time)*4 <= 255:
+            fill(255,255,255, (self.lifespan - self.time)*4)
+        else:
+            fill(255,255,255)
+        self.time += 1
+        pushMatrix()
+        translate(self.position.x, self.position.y, self.position.z)
+        box(self.dimension.x, self.dimension.y//3, self.dimension.z)
+        popMatrix()
+    
+    def death(self):
+        if self.time >= self.lifespan:
+            return True
+        else:
+            return False
+        
+
+    def collision(self,player):
+        if cam.position.x + player.dimension.x > self.position.x - self.dimension.x/2 and cam.position.x - player.dimension.x < self.position.x + self.dimension.x/2:
+            if cam.position.y + player.dimension.y > self.position.y - self.dimension.y/2 and cam.position.y - player.dimension.y < self.position.y + self.dimension.y/2:
+                if cam.position.z + player.dimension.z > self.position.z - self.dimension.z/2 and cam.position.z - player.dimension.z < self.position.z + self.dimension.z/2:
+                    
+                    if cam.position.y + player.dimension.y/2 + 1 > self.position.y + self.dimension.y/2:
+                        cam.position.y = self.position.y + self.dimension.y/2 + player.dimension.y
+                    elif cam.position.y - player.dimension.y/2 - 1 < self.position.y - self.dimension.y/2:
+                        cam.position.y = self.position.y - self.dimension.y/2 - player.dimension.y
+                        player.grounded = True
+                        player.velocity.y = 0
+                    elif cam.position.x + player.dimension.x/2 + 1 > self.position.x + self.dimension.x/2:
+                        cam.position.x = self.position.x + self.dimension.x/2 + player.dimension.x
+                        player.grounded = True
+                    elif cam.position.x - player.dimension.x/2 - 1 < self.position.x - self.dimension.x/2:
+                        cam.position.x = self.position.x - self.dimension.x/2 - player.dimension.x
+                        player.grounded = True
+                    elif cam.position.z + player.dimension.z/2 + 1 > self.position.z + self.dimension.z/2:
+                        cam.position.z = self.position.z + self.dimension.z/2 + player.dimension.z
+                        player.grounded = True
+                    elif cam.position.z - player.dimension.z/2 - 1 < self.position.z - self.dimension.z/2:
+                        cam.position.z = self.position.z - self.dimension.z/2 - player.dimension.z
+                        player.grounded = True
+
+def mousePressed():
+    global screen, start_select, instructions_select, scores_select, exit_select, scores, score
+    if screen == "menu":
+        if start_select == True:
+            screen = "start"
+            cam.position.y = -50
+            cam.pan = radians(90)
+        if instructions_select == True:
+            screen = "instructions"
+        if scores_select == True:
+            screen = "scores"
+            cam.pan = radians(180)
+    if screen == "instructions":
+        if exit_select == True:
+            screen = "menu"
+            cam.pan = radians(270)
+    if screen == "scores":
+        if exit_select == True:
+            screen = "menu"
+            cam.pan = radians(270)
+    if screen == "game over":
+        if restart_select == True:
+            screen = "start"
+            saveStrings("scores.txt", scores)
+            score = 0
+        if menu_select == True:
+            screen = "menu"
+            cam.pan = radians(270)
+            scores = score_sort(scores)
+            print(scores)
+            saveStrings("scores.txt", scores)
+            score = 0 
+
+#quicksort scores
+def score_sort(scores):
+    for n in scores:
+        n = int(n)
+    less = []
+    equal = []
+    more = []
+    if len(scores) > 1:
+        pivot = scores[0]
+        for x in scores:
+            if x < pivot:
+                less.append(x)
+            elif x == pivot:
+                equal.append(x)
+            elif x > pivot:
+                more.append(x)
+        return score_sort(less) + equal + score_sort(more)
+    else:  
+        return scores
